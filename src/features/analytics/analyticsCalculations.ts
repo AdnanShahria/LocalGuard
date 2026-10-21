@@ -1,4 +1,21 @@
-import { FocusSession, AggregateStatistics, HistoryFilterOptions } from '../../shared/types';
+import {
+  FocusSession,
+  AggregateStatistics,
+  HistoryFilterOptions,
+  type GuardedSite,
+} from '../../shared/types';
+
+export interface SiteUsageSummary {
+  siteId: string;
+  name: string;
+  domain: string;
+  todayMinutes: number;
+  weeklyMinutes: number;
+  allTimeMinutes: number;
+  sessionCount: number;
+  customColor?: string;
+  enabled?: boolean;
+}
 
 /**
  * Computes all 13 essential metrics from historical session records and canceled prompt counts.
@@ -135,6 +152,8 @@ export interface DailyActivityPoint {
   youtubeMinutes: number;
   totalMinutes: number;
   sessionCount: number;
+  plannedMinutes: number;
+  actualMinutes: number;
 }
 
 /**
@@ -155,9 +174,14 @@ export function getDailyActivity(history: FocusSession[], daysCount = 7): DailyA
 
     let fbMs = 0;
     let ytMs = 0;
+    let plannedMs = 0;
+    let actualMs = 0;
+
     daySessions.forEach((s) => {
-      if (s.site === 'facebook') fbMs += s.actualDurationMs;
-      if (s.site === 'youtube') ytMs += s.actualDurationMs;
+      plannedMs += s.allocatedDurationMs || 0;
+      actualMs += s.actualDurationMs || 0;
+      if (s.site === 'facebook' || s.site?.includes('facebook')) fbMs += s.actualDurationMs;
+      if (s.site === 'youtube' || s.site?.includes('youtube')) ytMs += s.actualDurationMs;
     });
 
     const dateLabel = d.toLocaleDateString(undefined, { weekday: 'short', month: 'numeric', day: 'numeric' });
@@ -167,10 +191,202 @@ export function getDailyActivity(history: FocusSession[], daysCount = 7): DailyA
       timestamp: dayStart,
       facebookMinutes: Math.round(fbMs / 60000),
       youtubeMinutes: Math.round(ytMs / 60000),
-      totalMinutes: Math.round((fbMs + ytMs) / 60000),
+      totalMinutes: Math.round(actualMs / 60000),
       sessionCount: daySessions.length,
+      plannedMinutes: Math.round(plannedMs / 60000),
+      actualMinutes: Math.round(actualMs / 60000),
     });
   }
 
   return result;
+}
+
+/**
+ * Check if a session belongs to a guarded site.
+ */
+function isSessionForSite(session: FocusSession, site: GuardedSite): boolean {
+  if (!session.site) return false;
+  const sessSite = session.site.toLowerCase().trim();
+  const siteId = site.id.toLowerCase().trim();
+  const cleanDomain = site.domain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '').trim();
+  const cleanSessSite = sessSite.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '').trim();
+
+  // Exact ID match
+  if (sessSite === siteId) return true;
+  // Exact domain match
+  if (cleanSessSite === cleanDomain) return true;
+
+  // Domain prefix match (e.g. 'youtube' matching 'youtube.com')
+  const domainParts = cleanDomain.split('.');
+  const primaryDomainPart = domainParts[0];
+  if (sessSite === primaryDomainPart) return true;
+  if (cleanSessSite === primaryDomainPart) return true;
+
+  return false;
+}
+
+/**
+ * Computes usage summary for each guarded site: todayMinutes, weeklyMinutes, allTimeMinutes, sessionCount.
+ */
+export function getSiteUsageSummary(
+  history: FocusSession[],
+  guardedSites: GuardedSite[]
+): SiteUsageSummary[] {
+  const startOfToday = new Date().setHours(0, 0, 0, 0);
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+  return (guardedSites || []).map((site) => {
+    const siteSessions = history.filter((s) => isSessionForSite(s, site));
+
+    let todayMs = 0;
+    let weeklyMs = 0;
+    let allTimeMs = 0;
+
+    for (const s of siteSessions) {
+      const duration = s.actualDurationMs || 0;
+      allTimeMs += duration;
+
+      if (s.startTime >= startOfToday) {
+        todayMs += duration;
+      }
+      if (s.startTime >= sevenDaysAgo) {
+        weeklyMs += duration;
+      }
+    }
+
+    return {
+      siteId: site.id,
+      name: site.name,
+      domain: site.domain,
+      todayMinutes: Math.round(todayMs / 60000),
+      weeklyMinutes: Math.round(weeklyMs / 60000),
+      allTimeMinutes: Math.round(allTimeMs / 60000),
+      sessionCount: siteSessions.length,
+      customColor: site.customColor,
+      enabled: site.enabled,
+    };
+  });
+}
+
+/**
+ * Computes an array of 24 numbers representing minutes or sessions per hour of the day (00:00 to 23:00).
+ */
+export function calculateHourlyActivity(
+  history: FocusSession[],
+  metric: 'minutes' | 'sessions' = 'minutes'
+): number[] {
+  const hourly = new Array<number>(24).fill(0);
+  for (const session of history) {
+    if (session.startTime) {
+      const date = new Date(session.startTime);
+      const hour = date.getHours();
+      if (hour >= 0 && hour < 24) {
+        if (metric === 'sessions') {
+          hourly[hour] += 1;
+        } else {
+          const mins = Math.round((session.actualDurationMs || 0) / 60000);
+          hourly[hour] += mins;
+        }
+      }
+    }
+  }
+  return hourly;
+}
+
+export interface TodayUsageOverview {
+  totalScreenMinutes: number;
+  guardedMinutes: number;
+  regularMinutes: number;
+  budgetMinutes: number;
+  budgetProgressPercent: number;
+  yesterdayGuardedMinutes: number;
+  trendDiffMinutes: number;
+  activeSessionsCount: number;
+  todayCompletedCount: number;
+  todayAbandonedCount: number;
+  todaySessionsCount: number;
+  todayTasksCompleted: number;
+  todayTasksCreated: number;
+}
+
+/**
+ * Computes today's comprehensive screen time, guarded focus time, regular time,
+ * daily budget progress, and yesterday's comparison trend.
+ */
+export function getTodayUsageOverview(
+  history: FocusSession[],
+  activeSessions: Record<string, FocusSession | null> = {},
+  budgetMinutes: number = 120,
+  browserHistoryEstimatedMinutes?: number
+): TodayUsageOverview {
+  const now = Date.now();
+  const startOfToday = new Date().setHours(0, 0, 0, 0);
+  const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+
+  const todaySessions = history.filter((s) => s.startTime >= startOfToday);
+  const yesterdaySessions = history.filter(
+    (s) => s.startTime >= startOfYesterday && s.startTime < startOfToday
+  );
+
+  let todayGuardedMs = todaySessions.reduce((acc, s) => acc + (s.actualDurationMs || 0), 0);
+  const yesterdayGuardedMs = yesterdaySessions.reduce((acc, s) => acc + (s.actualDurationMs || 0), 0);
+
+  let todayTasksCompleted = 0;
+  let todayTasksCreated = 0;
+
+  for (const s of todaySessions) {
+    todayTasksCompleted += s.tasksCompletedCount ?? s.tasks.filter((t) => t.completed).length;
+    todayTasksCreated += s.totalTasksCount ?? s.tasks.length;
+  }
+
+  // Include elapsed time and tasks from currently active sessions
+  let activeSessionsCount = 0;
+  for (const session of Object.values(activeSessions)) {
+    if (
+      session &&
+      (session.status === 'active' || session.status === 'paused' || session.status === 'expired')
+    ) {
+      activeSessionsCount++;
+      const elapsed = Math.max(0, now - session.startTime);
+      todayGuardedMs += elapsed;
+
+      todayTasksCompleted += session.tasks.filter((t) => t.completed).length;
+      todayTasksCreated += session.tasks.length;
+    }
+  }
+
+  const guardedMinutes = Math.round(todayGuardedMs / 60000);
+  const yesterdayGuardedMinutes = Math.round(yesterdayGuardedMs / 60000);
+  const trendDiffMinutes = guardedMinutes - yesterdayGuardedMinutes;
+
+  const estimatedTotalBrowsing =
+    browserHistoryEstimatedMinutes !== undefined && browserHistoryEstimatedMinutes > 0
+      ? Math.max(guardedMinutes, browserHistoryEstimatedMinutes)
+      : Math.max(guardedMinutes, Math.round(guardedMinutes * 1.5));
+
+  const totalScreenMinutes = estimatedTotalBrowsing;
+  const regularMinutes = Math.max(0, totalScreenMinutes - guardedMinutes);
+  const budgetProgressPercent =
+    budgetMinutes > 0
+      ? Math.min(100, Math.round((guardedMinutes / budgetMinutes) * 100))
+      : 0;
+
+  const todayCompletedCount = todaySessions.filter((s) => s.status === 'completed').length;
+  const todayAbandonedCount = todaySessions.filter((s) => s.status === 'abandoned').length;
+
+  return {
+    totalScreenMinutes,
+    guardedMinutes,
+    regularMinutes,
+    budgetMinutes,
+    budgetProgressPercent,
+    yesterdayGuardedMinutes,
+    trendDiffMinutes,
+    activeSessionsCount,
+    todayCompletedCount,
+    todayAbandonedCount,
+    todaySessionsCount: todaySessions.length + activeSessionsCount,
+    todayTasksCompleted,
+    todayTasksCreated,
+  };
 }
