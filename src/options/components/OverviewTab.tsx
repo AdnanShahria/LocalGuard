@@ -168,15 +168,23 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     fetchBrowserHistory();
   }, []);
 
-  // Compute total estimated browsing minutes from history
+  // Compute total estimated browsing minutes from history.
+  // totalVisits is now correctly the count of distinct URLs navigated today
+  // (not the all-time cumulative visitCount), so we use ~2 min per navigation.
   const historyBrowsingMinutes = (browserHistory.topDomains || []).reduce(
-    (acc, d) => acc + (d.estimatedMinutes || Math.max(1, Math.round(d.count * 2.5))),
+    (acc, d) => acc + (d.estimatedMinutes || Math.max(1, Math.round(d.count * 2))),
     0
   );
-  const totalHistoryVisitsMinutes = Math.max(
+  const rawHistoryEstimate = Math.max(
     historyBrowsingMinutes,
-    Math.round((browserHistory.totalVisits || 0) * 2.2)
+    Math.round((browserHistory.totalVisits || 0) * 2)
   );
+  // Hard ceiling: screen time cannot exceed the number of minutes elapsed since midnight.
+  // This prevents inflated estimates from exceeding physically possible time.
+  const minutesSinceMidnight = Math.floor(
+    (Date.now() - new Date().setHours(0, 0, 0, 0)) / 60000
+  );
+  const totalHistoryVisitsMinutes = Math.min(rawHistoryEstimate, minutesSinceMidnight);
 
   // Compute today's usage overview (Guarded vs Regular, Budget progress, Daily trend)
   const dailyBudgetMinutes = settings?.dailyUsageBudgetMinutes || 120;

@@ -568,11 +568,16 @@ export async function handleRuntimeMessage(
       chrome.history.search(
         { text: '', startTime: startOfDay, maxResults: 10000 },
         (items) => {
-          const totalVisits = items.reduce((acc, it) => acc + (it.visitCount || 1), 0);
+          // IMPORTANT: chrome.history.search() filters URLs by lastVisitTime >= startTime,
+          // but item.visitCount is the ALL-TIME cumulative count for that URL, not today's count.
+          // Each item represents exactly 1 distinct URL that was navigated to today.
+          // We count items.length (distinct page navigations today), NOT the sum of visitCount.
+          const totalVisits = items.length;
+
           const domainMap: Record<
             string,
             {
-              count: number;
+              count: number;       // number of distinct URLs visited today for this domain
               lastVisitTime: number;
               firstVisitTime: number;
               sampleTitle?: string;
@@ -581,7 +586,8 @@ export async function handleRuntimeMessage(
           const hourlyDistribution: number[] = new Array(24).fill(0);
 
           for (const item of items) {
-            const visits = item.visitCount || 1;
+            // Each item = 1 navigation today (not its all-time visitCount)
+            const visits = 1;
 
             if (item.url) {
               try {
@@ -631,7 +637,8 @@ export async function handleRuntimeMessage(
               count: data.count,
               percentage: totalVisits > 0 ? Math.round((data.count / totalVisits) * 100) : 0,
               lastVisitTime: data.lastVisitTime,
-              estimatedMinutes: Math.max(1, Math.round(data.count * 2.5)),
+              // ~2 min avg dwell time per distinct page navigation
+              estimatedMinutes: Math.max(1, Math.round(data.count * 2)),
             }));
 
           sendResponse({

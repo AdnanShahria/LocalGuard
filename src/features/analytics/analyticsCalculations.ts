@@ -359,10 +359,18 @@ export function getTodayUsageOverview(
   const yesterdayGuardedMinutes = Math.round(yesterdayGuardedMs / 60000);
   const trendDiffMinutes = guardedMinutes - yesterdayGuardedMinutes;
 
-  const estimatedTotalBrowsing =
+  // Minutes elapsed since midnight: the hard physical ceiling for any screen time estimate.
+  // No browsing estimate should ever exceed this value.
+  const minutesSinceMidnight = Math.floor((now - new Date(now).setHours(0, 0, 0, 0)) / 60000);
+
+  const rawEstimatedTotal =
     browserHistoryEstimatedMinutes !== undefined && browserHistoryEstimatedMinutes > 0
       ? Math.max(guardedMinutes, browserHistoryEstimatedMinutes)
       : Math.max(guardedMinutes, Math.round(guardedMinutes * 1.5));
+
+  // Cap to minutes elapsed since midnight — it is physically impossible to browse
+  // more than the time that has passed today.
+  const estimatedTotalBrowsing = Math.min(rawEstimatedTotal, minutesSinceMidnight);
 
   const totalScreenMinutes = estimatedTotalBrowsing;
   const regularMinutes = Math.max(0, totalScreenMinutes - guardedMinutes);
