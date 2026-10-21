@@ -1,11 +1,33 @@
-import { SiteId } from '../shared/types';
+import { GuardedSite } from '../shared/types';
 
 /**
- * Detects whether the current page belongs to Facebook or YouTube.
- * Returns null if on an unsupported domain.
+ * Detects whether the current page belongs to any enabled guarded site.
+ * Supports exact domain match and subdomain matches (e.g. m.facebook.com matches facebook.com).
  */
-export function detectCurrentSite(hostname = window.location.hostname): SiteId | null {
+export function detectGuardedSite(
+  hostname = window.location.hostname,
+  guardedSites: GuardedSite[] = []
+): GuardedSite | null {
+  if (!hostname || !Array.isArray(guardedSites)) {
+    return null;
+  }
+
   const host = hostname.toLowerCase();
+  for (const site of guardedSites) {
+    if (!site || !site.enabled || !site.domain) continue;
+    const d = site.domain.toLowerCase().trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (host === d || host.endsWith('.' + d)) {
+      return site;
+    }
+  }
+  return null;
+}
+
+/**
+ * Backward compatibility helper for legacy hardcoded site checks.
+ */
+export function detectCurrentSite(hostname = window.location.hostname): string | null {
+  const host = (hostname || '').toLowerCase();
 
   // YouTube match
   if (
