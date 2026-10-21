@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient: Deep Sapphire (#0A192F) -> Deep Cobalt (#1E3A8A) -> Electric Cobalt (#3B82F6) -->
+    <linearGradient id="sapphireCobaltGrad" x1="16%" y1="0%" x2="84%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="44%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#0A192F" />
+    </linearGradient>
+
+    <!-- Subtle Radiant Ambient Glow (#60A5FA) -->
+    <radialGradient id="ambientApertureGlow" cx="50%" cy="50%" r="48%">
+      <stop offset="0%" stop-color="#60A5FA" stop-opacity="0.55" />
+      <stop offset="32%" stop-color="#3B82F6" stop-opacity="0.28" />
+      <stop offset="68%" stop-color="#1E3A8A" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#0A192F" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Center Aperture Optical Core Glow -->
+    <radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="30%" stop-color="#93C5FD" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#60A5FA" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Apple Liquid Glass Specular Rim Highlight -->
+    <linearGradient id="specularRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5" />
+      <stop offset="15%" stop-color="#FFFFFF" stop-opacity="0.18" />
+      <stop offset="65%" stop-color="#60A5FA" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#93C5FD" stop-opacity="0.32" />
+    </linearGradient>
+
+    <!-- Upper Surface Glass Sheen Refraction -->
+    <linearGradient id="glassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.2" />
+      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- High-Contrast Vector Reticle Gradient -->
+    <linearGradient id="reticleWhite" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#F0F9FF" />
+      <stop offset="100%" stop-color="#C7D2FE" />
+    </linearGradient>
+
+    <!-- Aperture Blade Metallic Gradient -->
+    <linearGradient id="bladeMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#E0E7FF" />
+      <stop offset="100%" stop-color="#93C5FD" />
+    </linearGradient>
+
+    <!-- Squircle Drop Shadow -->
+    <filter id="tileDropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#020617" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Ambient Glow Blur -->
+    <filter id="ambientBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+
+    <!-- Squircle Clip -->
+    <clipPath id="squircleClip">
+      <rect x="24" y="24" width="464" height="464" rx="28%" ry="28%" />
+    </clipPath>
+  </defs>
+
+  <!-- 1. Apple Squircle Shield Base (Continuous Curvature rx="28%") -->
+  <rect x="24" y="24" width="464" height="464" rx="28%" ry="28%"
+        fill="url(#sapphireCobaltGrad)"
+        stroke="url(#specularRim)"
+        stroke-width="2.5"
+        filter="url(#tileDropShadow)" />
+
+  <!-- 2. Liquid Glass Material Sheen (Apple HIG Convex Glass Arc) -->
+  <g clip-path="url(#squircleClip)">
+    <ellipse cx="256" cy="112" rx="236" ry="132" fill="url(#glassReflection)" />
+  </g>
+
+  <!-- 3. Radiant Ambient Optical Glow Field (#60A5FA) -->
+  <circle cx="256" cy="256" r="170" fill="url(#ambientApertureGlow)" filter="url(#ambientBlur)" />
+  <circle cx="256" cy="256" r="120" fill="url(#ambientApertureGlow)" />
+
+  <!-- 4. Autofocus Targeting Brackets (4 Quadrants) -->
+  <g fill="none" stroke="#60A5FA" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <!-- Top-Left Bracket -->
+    <path d="M 144 190 L 144 148 L 186 148" />
+    <!-- Top-Right Bracket -->
+    <path d="M 326 148 L 368 148 L 368 190" />
+    <!-- Bottom-Left Bracket -->
+    <path d="M 144 322 L 144 364 L 186 364" />
+    <!-- Bottom-Right Bracket -->
+    <path d="M 326 364 L 368 364 L 368 322" />
+  </g>
+
+  <!-- 5. Outer Precision Focus Reticle Ring (R = 104px, 4 Quadrants) -->
+  <g fill="none" stroke="url(#reticleWhite)" stroke-width="8" stroke-linecap="round">
+    <!-- Top-Right Quadrant: 14° to 76° -->
+    <path d="M 357.0 230.8 A 104 104 0 0 0 281.2 155.0" />
+    <!-- Top-Left Quadrant: 104° to 166° -->
+    <path d="M 230.8 155.0 A 104 104 0 0 0 155.0 230.8" />
+    <!-- Bottom-Left Quadrant: 194° to 256° -->
+    <path d="M 155.0 281.2 A 104 104 0 0 0 230.8 357.0" />
+    <!-- Bottom-Right Quadrant: 284° to 346° -->
+    <path d="M 281.2 357.0 A 104 104 0 0 0 357.0 281.2" />
+  </g>
+
+  <!-- 6. Precision Cardinal Crosshair Ticks -->
+  <g stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round">
+    <!-- North Tick -->
+    <line x1="256" y1="130" x2="256" y2="172" />
+    <!-- South Tick -->
+    <line x1="256" y1="340" x2="256" y2="382" />
+    <!-- West Tick -->
+    <line x1="130" y1="256" x2="172" y2="256" />
+    <!-- East Tick -->
+    <line x1="340" y1="256" x2="382" y2="256" />
+  </g>
+
+  <!-- 7. Optical Calibration Index Ring -->
+  <circle cx="256" cy="256" r="74"
+          fill="none"
+          stroke="#93C5FD"
+          stroke-width="2.5"
+          stroke-dasharray="6 8"
+          opacity="0.8" />
+
+  <!-- 8. Precision Optical Aperture (6 Geometric Interlocking Iris Blades) -->
+  <g id="apertureIris">
+    <!-- Outer rim casing -->
+    <circle cx="256" cy="256" r="54" fill="#0A192F" stroke="#3B82F6" stroke-width="2.5" />
+    
+    <!-- Blade 1 (0°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round" />
+    <!-- Blade 2 (60°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round"
+          transform="rotate(60, 256, 256)" />
+    <!-- Blade 3 (120°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round"
+          transform="rotate(120, 256, 256)" />
+    <!-- Blade 4 (180°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round"
+          transform="rotate(180, 256, 256)" />
+    <!-- Blade 5 (240°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round"
+          transform="rotate(240, 256, 256)" />
+    <!-- Blade 6 (300°) -->
+    <path d="M 308 256 C 308 284, 284 308, 256 308 L 256 278 C 268 278, 278 268, 278 256 Z"
+          fill="url(#bladeMetallic)" stroke="#0F172A" stroke-width="1.5" stroke-linejoin="round"
+          transform="rotate(300, 256, 256)" />
+  </g>
+
+  <!-- 9. Luminous Optical Iris Pupil / High-Intensity Focus Core -->
+  <circle cx="256" cy="256" r="22" fill="url(#pupilGlow)" />
+  <circle cx="256" cy="256" r="10" fill="#FFFFFF" />
+  <circle cx="256" cy="256" r="4" fill="#0A192F" />
+</svg>
