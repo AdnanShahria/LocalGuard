@@ -1,12 +1,68 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { detectCurrentSite } from '../src/content/siteDetector';
+import { detectCurrentSite, detectGuardedSite } from '../src/content/siteDetector';
 import { getActiveSession, saveActiveSession } from '../src/storage/storage';
 import { resetMockStorage } from './setup';
-import { FocusSession } from '../src/shared/types';
+import { FocusSession, GuardedSite } from '../src/shared/types';
 
 describe('Website Detection & Lifecycle Scenarios', () => {
+  const sampleGuardedSites: GuardedSite[] = [
+    {
+      id: 'facebook',
+      domain: 'facebook.com',
+      name: 'Facebook',
+      enabled: true,
+      addedAt: Date.now(),
+      customColor: '#1877F2',
+    },
+    {
+      id: 'youtube',
+      domain: 'youtube.com',
+      name: 'YouTube',
+      enabled: true,
+      addedAt: Date.now(),
+      customColor: '#FF0000',
+    },
+    {
+      id: 'reddit',
+      domain: 'reddit.com',
+      name: 'Reddit',
+      enabled: true,
+      addedAt: Date.now(),
+      customColor: '#FF4500',
+    },
+    {
+      id: 'disabled-site',
+      domain: 'distraction.com',
+      name: 'Distraction',
+      enabled: false,
+      addedAt: Date.now(),
+    },
+  ];
+
   beforeEach(() => {
     resetMockStorage();
+  });
+
+  // Dynamic Site Detection
+  it('detects guarded sites dynamically and matches subdomains', () => {
+    expect(detectGuardedSite('facebook.com', sampleGuardedSites)?.id).toBe('facebook');
+    expect(detectGuardedSite('www.facebook.com', sampleGuardedSites)?.id).toBe('facebook');
+    expect(detectGuardedSite('m.facebook.com', sampleGuardedSites)?.id).toBe('facebook');
+    expect(detectGuardedSite('youtube.com', sampleGuardedSites)?.id).toBe('youtube');
+    expect(detectGuardedSite('m.youtube.com', sampleGuardedSites)?.id).toBe('youtube');
+    expect(detectGuardedSite('old.reddit.com', sampleGuardedSites)?.id).toBe('reddit');
+    expect(detectGuardedSite('reddit.com', sampleGuardedSites)?.id).toBe('reddit');
+  });
+
+  it('ignores disabled guarded sites', () => {
+    expect(detectGuardedSite('distraction.com', sampleGuardedSites)).toBeNull();
+    expect(detectGuardedSite('sub.distraction.com', sampleGuardedSites)).toBeNull();
+  });
+
+  it('rejects unguarded sites without activating', () => {
+    expect(detectGuardedSite('wikipedia.org', sampleGuardedSites)).toBeNull();
+    expect(detectGuardedSite('github.com', sampleGuardedSites)).toBeNull();
+    expect(detectGuardedSite('google.com', sampleGuardedSites)).toBeNull();
   });
 
   // Scenario 1: Opening Facebook with no active session
@@ -27,7 +83,7 @@ describe('Website Detection & Lifecycle Scenarios', () => {
     expect(activeSession).toBeNull();
   });
 
-  it('rejects unsupported websites without activating', () => {
+  it('rejects unsupported websites without activating in legacy helper', () => {
     expect(detectCurrentSite('google.com')).toBeNull();
     expect(detectCurrentSite('twitter.com')).toBeNull();
     expect(detectCurrentSite('reddit.com')).toBeNull();
@@ -84,10 +140,10 @@ describe('Website Detection & Lifecycle Scenarios', () => {
     let mountedCount = 0;
 
     const mountGuard = (win: any) => {
-      if (win.__LIFESOLVER_FOCUS_GUARD_MOUNTED__) {
+      if (win.__LOCALGUARD_MOUNTED__ || win.__LIFESOLVER_FOCUS_GUARD_MOUNTED__) {
         return false; // Skip duplicate mount
       }
-      win.__LIFESOLVER_FOCUS_GUARD_MOUNTED__ = true;
+      win.__LOCALGUARD_MOUNTED__ = true;
       mountedCount += 1;
       return true;
     };
