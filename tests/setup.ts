@@ -44,6 +44,27 @@ const mockChromeAction = {
 
 const mockChromeTabs = {
   create: vi.fn(),
+  update: vi.fn().mockResolvedValue({ id: 1, active: true }),
+  sendMessage: vi.fn().mockResolvedValue({ success: true }),
+  get: vi.fn().mockResolvedValue({ id: 1, active: true }),
+  query: vi.fn().mockResolvedValue([{ id: 1, active: true, url: 'https://youtube.com' }]),
+  remove: vi.fn().mockResolvedValue(undefined),
+  onActivated: {
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  },
+  onUpdated: {
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  },
+};
+
+const mockChromeAlarms = {
+  create: vi.fn(),
+  onAlarm: {
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  },
 };
 
 // Polyfill global chrome object
@@ -52,6 +73,7 @@ const mockChromeTabs = {
   runtime: mockChromeRuntime,
   action: mockChromeAction,
   tabs: mockChromeTabs,
+  alarms: mockChromeAlarms,
 };
 
 // Helper for test resets
