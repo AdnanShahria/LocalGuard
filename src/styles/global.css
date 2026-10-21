@@ -2,29 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  margin: 0;
-  padding: 0;
-  background-color: #0c0e14;
-  color: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color-scheme: dark;
+@layer base {
+  :root {
+    --font-apple-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Inter", -apple-system-subheadline, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-apple-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-apple-system);
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 }
 
+/* Premium Apple Tabular Figures for All Numerical Data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Apple Design Typography System Classes */
+.apple-display-lg {
+  font-family: var(--font-apple-system);
+  letter-spacing: -0.026em;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.apple-display-md {
+  font-family: var(--font-apple-system);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.apple-headline {
+  font-family: var(--font-apple-system);
+  letter-spacing: -0.014em;
+  font-weight: 600;
+}
+
+.apple-eyebrow {
+  font-family: var(--font-apple-system);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 600;
+}
+
+.apple-body {
+  font-family: var(--font-apple-system);
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.5;
+  color: #475569;
+}
+
+.apple-caption {
+  font-family: var(--font-apple-system);
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.4;
+  color: #64748b;
+}
+
+/* Apple Card System */
+.apple-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 1rem; /* 16px */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-card:hover {
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Apple Smooth Button Feedback */
+.apple-btn {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-btn:active {
+  transform: scale(0.975);
+}
+
+/* Apple-style Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(100, 116, 139, 0.55);
 }
