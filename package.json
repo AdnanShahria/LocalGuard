@@ -1,7 +1,7 @@
 {
-  "name": "lifesolver-focus-guard",
+  "name": "localguard",
   "version": "1.0.0",
-  "description": "LifeSolver Focus Guard - Intentional, focused Facebook & YouTube browsing",
+  "description": "LocalGuard - Intentional, focused browsing & website guardian",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "clsx": "^2.1.1",
