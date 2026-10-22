@@ -5,7 +5,8 @@ import { calculateStatistics } from '../features/analytics/analyticsCalculations
 import { OverviewTab } from './components/OverviewTab';
 import { HistoryTab } from './components/HistoryTab';
 import { SettingsTab } from './components/SettingsTab';
-import { Shield, BarChart2, History, Settings, ExternalLink } from 'lucide-react';
+import { BrandLogo } from '../shared/components/BrandLogo';
+import { BarChart2, History, Settings, ExternalLink } from 'lucide-react';
 
 export const Options: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'settings'>('overview');
@@ -49,68 +50,66 @@ export const Options: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0c0e14] text-slate-100 font-sans selection:bg-blue-600 selection:text-white">
-      {/* Top Navbar */}
-      <header className="border-b border-white/5 bg-[#10141f]/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
+      {/* Top Navbar - Apple White Mode */}
+      <header className="bg-white/85 backdrop-blur-md border-b border-slate-200/90 text-slate-900 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
+            <BrandLogo size={38} variant="squircle" showText={false} />
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-base font-bold text-white tracking-tight">
-                  LifeSolver Focus Guard
+                <span className="text-base font-bold text-slate-900 tracking-tight">
+                  LocalGuard
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-medium">
-                  Local Dashboard
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60 font-semibold tracking-wide">
+                  Active Protection
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Intentional Facebook & YouTube Browsing</p>
+              <p className="text-xs text-slate-500 font-normal">Intentional & Focused Browsing Guardian</p>
             </div>
           </div>
 
-          {/* Quick links to supported sites */}
+          {/* Quick links to guarded sites */}
           <div className="hidden sm:flex items-center space-x-2 text-xs">
-            <a
-              href="https://www.youtube.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/20 flex items-center space-x-1 transition-colors"
-            >
-              <span>YouTube</span>
-              <ExternalLink className="w-3 h-3 text-red-400" />
-            </a>
-            <a
-              href="https://www.facebook.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 border border-blue-500/20 flex items-center space-x-1 transition-colors"
-            >
-              <span>Facebook</span>
-              <ExternalLink className="w-3 h-3 text-blue-400" />
-            </a>
+            {(settings.guardedSites && settings.guardedSites.length > 0
+              ? settings.guardedSites.slice(0, 3)
+              : [
+                  { id: 'youtube', name: 'YouTube', domain: 'youtube.com' },
+                  { id: 'facebook', name: 'Facebook', domain: 'facebook.com' },
+                ]
+            ).map((site) => (
+              <a
+                key={site.id}
+                href={`https://${site.domain}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-slate-200/80 active:scale-95 text-slate-700 border border-slate-200/80 flex items-center space-x-1.5 transition-all font-medium"
+              >
+                <span>{site.name}</span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+            ))}
           </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-        {/* Tab Switcher */}
-        <div className="flex space-x-1 p-1.5 bg-[#141824] rounded-2xl border border-white/5 max-w-md">
+        {/* Clean Apple Tab Switcher */}
+        <div className="flex space-x-1 p-1 bg-slate-200/60 rounded-2xl border border-slate-200/80 max-w-md shadow-2xs">
           <button
             onClick={() => {
               setActiveTab('overview');
               window.location.hash = 'overview';
             }}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all active:scale-98 ${
               activeTab === 'overview'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
+                : 'text-slate-600 hover:text-slate-900 font-medium'
             }`}
           >
-            <BarChart2 className="w-4 h-4" />
-            <span>Overview & Analytics</span>
+            <BarChart2 className="w-4 h-4 text-blue-600" />
+            <span>Overview</span>
           </button>
 
           <button
@@ -118,14 +117,14 @@ export const Options: React.FC = () => {
               setActiveTab('history');
               window.location.hash = 'history';
             }}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all active:scale-98 ${
               activeTab === 'history'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
+                : 'text-slate-600 hover:text-slate-900 font-medium'
             }`}
           >
-            <History className="w-4 h-4" />
-            <span>Session History</span>
+            <History className="w-4 h-4 text-emerald-600" />
+            <span>History</span>
           </button>
 
           <button
@@ -133,26 +132,35 @@ export const Options: React.FC = () => {
               setActiveTab('settings');
               window.location.hash = 'settings';
             }}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all ${
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all active:scale-98 ${
               activeTab === 'settings'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/60 font-bold'
+                : 'text-slate-600 hover:text-slate-900 font-medium'
             }`}
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-4 h-4 text-slate-700" />
             <span>Settings</span>
           </button>
         </div>
 
         {/* Tab Views */}
         {isLoading ? (
-          <div className="p-12 text-center text-slate-400">Loading data...</div>
+          <div className="p-12 text-center text-slate-500 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            Loading LocalGuard data...
+          </div>
         ) : (
           <>
             {activeTab === 'overview' && stats && (
-              <OverviewTab stats={stats} history={history} />
+              <OverviewTab
+                stats={stats}
+                history={history}
+                guardedSites={settings.guardedSites}
+                settings={settings}
+              />
             )}
-            {activeTab === 'history' && <HistoryTab history={history} />}
+            {activeTab === 'history' && (
+              <HistoryTab history={history} settings={settings} />
+            )}
             {activeTab === 'settings' && (
               <SettingsTab
                 settings={settings}
