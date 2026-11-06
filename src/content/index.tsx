@@ -54,7 +54,7 @@ export const ContentApp: React.FC = () => {
     try {
       const currentSettings = await getSettings();
       const currentGuardedSites = currentSettings.guardedSites || [];
-      const matched = detectGuardedSite(window.location.hostname, currentGuardedSites);
+      const matched = detectGuardedSite(window.location.hostname, currentGuardedSites, window.location.href);
 
       setSettings(currentSettings);
       setGuardedSite(matched);
@@ -105,7 +105,7 @@ export const ContentApp: React.FC = () => {
       setAwayState(newSchema.awayState || null);
 
       const guardedSitesList = newSchema.settings.guardedSites || [];
-      const matched = detectGuardedSite(window.location.hostname, guardedSitesList);
+      const matched = detectGuardedSite(window.location.hostname, guardedSitesList, window.location.href);
       setGuardedSite(matched);
 
       if (matched) {

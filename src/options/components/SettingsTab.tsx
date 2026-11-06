@@ -153,17 +153,43 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
 
   const handleAddCustomSite = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    let domain = newDomainInput.trim().toLowerCase();
-    // Clean domain: strip protocol, www, trailing slashes and paths
-    domain = domain
-      .replace(/^https?:\/\//i, '')
-      .replace(/^www\./i, '')
-      .split('/')[0]
-      .split('?')[0]
-      .trim();
+    const raw = newDomainInput.trim();
+
+    // Detect non-HTTP/HTTPS browser URLs (file://, chrome://, edge://, about:, etc.)
+    const isBrowserUrl = /^(file|chrome|edge|about|chrome-extension|moz-extension|brave|opera):/i.test(raw);
+
+    let domain: string;
+    let defaultName: string;
+
+    if (isBrowserUrl) {
+      // Preserve the full URL prefix as-is (lowercased) — used for prefix matching
+      domain = raw.toLowerCase();
+      // Derive a readable name from the URL
+      try {
+        const u = new URL(raw);
+        if (u.protocol === 'file:') {
+          const parts = u.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+          defaultName = decodeURIComponent(parts[parts.length - 1] || 'Local File');
+        } else {
+          defaultName = u.hostname || u.protocol.replace(':', '');
+        }
+      } catch {
+        defaultName = raw.split('/').filter(Boolean).pop() || 'Browser Page';
+      }
+    } else {
+      // Standard http/https domain — strip protocol, www, paths
+      domain = raw
+        .toLowerCase()
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .split('/')[0]
+        .split('?')[0]
+        .trim();
+      defaultName = domain.split('.')[0];
+    }
 
     if (!domain) {
-      showStatus('Please enter a valid website domain.', true);
+      showStatus('Please enter a valid website domain or URL.', true);
       return;
     }
 
@@ -172,16 +198,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
       (s) => s.domain.toLowerCase() === domain || s.id.toLowerCase() === domain
     );
     if (exists) {
-      showStatus(`Website "${domain}" is already in your guarded list.`, true);
+      showStatus(`"${domain}" is already in your guarded list.`, true);
       return;
     }
 
-    const defaultName = domain.split('.')[0];
     const capitalizedDefault = defaultName.charAt(0).toUpperCase() + defaultName.slice(1);
     const finalName = newNameInput.trim() || capitalizedDefault;
 
     const newSite: GuardedSite = {
-      id: domain.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase() || `site-${Date.now()}`,
+      id: domain.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase().slice(0, 64) || `site-${Date.now()}`,
       domain,
       name: finalName,
       enabled: true,
@@ -533,7 +558,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 <Globe className="w-3.5 h-3.5 text-[#007AFF]" />
                 <span>Add New Guarded Website</span>
               </div>
-              <span className="text-[11px] text-slate-400">Supported format: domain.com</span>
+              <span className="text-[11px] text-slate-400">domain.com or file:// / chrome:// URLs</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -543,7 +568,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. reddit.com, x.com, instagram.com"
+                  placeholder="e.g. reddit.com or file:///C:/Users/Docs"
                   value={newDomainInput}
                   onChange={(e) => setNewDomainInput(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 transition-all"

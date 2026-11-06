@@ -84,15 +84,23 @@ export async function resolveFocusTabId(
           g.id.toLowerCase() === key.toLowerCase() ||
           g.domain.toLowerCase().includes(key.toLowerCase())
       );
-      const targetDomain = (guarded?.domain || key).toLowerCase().replace(/^www\./, '');
+      const targetPattern = (guarded?.domain || key).toLowerCase().replace(/^www\./, '');
+
+      // Detect if the stored pattern is a browser-native URL (file://, chrome://, etc.)
+      const isBrowserUrlPattern = /^(file|chrome|edge|about|chrome-extension|moz-extension|brave|opera):/.test(targetPattern);
 
       const tabs = await chrome.tabs.query({});
       const matched = tabs.find((t) => {
         if (!t.url) return false;
         try {
+          const tabUrl = t.url.toLowerCase();
+          if (isBrowserUrlPattern) {
+            // For file:// and browser-native URLs, match by URL prefix
+            return tabUrl.startsWith(targetPattern);
+          }
           const u = new URL(t.url);
           const host = u.hostname.toLowerCase().replace(/^www\./, '');
-          return host.includes(targetDomain) || targetDomain.includes(host);
+          return host.includes(targetPattern) || targetPattern.includes(host);
         } catch {
           return false;
         }
@@ -194,6 +202,7 @@ if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
   chrome.tabs.onUpdated.addListener((tabId, _changeInfo, tab) => {
     if (tab.url) {
       try {
+        const tabUrl = tab.url.toLowerCase();
         const u = new URL(tab.url);
         const host = u.hostname.toLowerCase().replace(/^www\./, '');
         getStorageData().then((data) => {
@@ -202,8 +211,13 @@ if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
               const guarded = data.settings?.guardedSites?.find(
                 (g) => g.id.toLowerCase() === siteKey.toLowerCase() || g.domain.toLowerCase().includes(siteKey.toLowerCase())
               );
-              const domain = (guarded?.domain || siteKey).toLowerCase().replace(/^www\./, '');
-              if (host.includes(domain) || domain.includes(host)) {
+              const pattern = (guarded?.domain || siteKey).toLowerCase().replace(/^www\./, '');
+              const isBrowserUrlPattern = /^(file|chrome|edge|about|chrome-extension|moz-extension|brave|opera):/.test(pattern);
+              if (isBrowserUrlPattern) {
+                if (tabUrl.startsWith(pattern)) {
+                  lastFocusTabId = tabId;
+                }
+              } else if (host && (host.includes(pattern) || pattern.includes(host))) {
                 lastFocusTabId = tabId;
               }
             }
